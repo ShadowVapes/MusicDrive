@@ -4,107 +4,118 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MusicDrive – Admin</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-
-<header class="topbar">
-  <div class="brand">
-    <div class="logo">⚙</div>
-    <div>
-      <div class="brandName">MusicDrive</div>
-      <div class="brandSub">admin</div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">⚙</div>
+      <div class="brandText">
+        <div class="brandName">MusicDrive</div>
+        <div class="brandSub">admin</div>
+      </div>
     </div>
-  </div>
-  <button id="btnSave" class="btn">Mentés</button>
-</header>
+    <div class="topActions">
+      <a class="btn ghost" href="index.html">← Vissza</a>
+      <button id="btnSave" class="btn">Mentés</button>
+    </div>
+  </header>
 
-<main class="shell">
+  <main class="shell">
+    <section class="panel">
+      <h2>GitHub mentés</h2>
+      <div class="formGrid">
+        <label class="field">
+          <span>Owner</span>
+          <input id="ghOwner" placeholder="pl. adris" />
+        </label>
+        <label class="field">
+          <span>Repo</span>
+          <input id="ghRepo" placeholder="pl. musicdrive" />
+        </label>
+        <label class="field">
+          <span>Branch</span>
+          <input id="ghBranch" placeholder="main" />
+        </label>
+        <label class="field full">
+          <span>GitHub token</span>
+          <input id="ghToken" placeholder="ghp_..." />
+          <small>Token: repo (Private) vagy public_repo (Public). Böngészőben tároljuk (localStorage).</small>
+          <small><b>Fontos:</b> GitHub API-val böngészőből nagy zenét feltölteni nem reális (szigorú méretlimit). A zenéket inkább git push-sal tedd fel a repóba, az admin itt csak a meta + útvonal.</small>
+        </label>
+      </div>
 
-<section class="panel">
-  <h2>GitHub beállítás</h2>
+      <div class="row">
+        <button id="btnTest" class="btn ghost">Kapcsolat teszt</button>
+        <span id="ghStatus" class="status">—</span>
+      </div>
+    </section>
 
-  <div class="formGrid">
-    <label class="field">
-      <span>Owner</span>
-      <input id="ghOwner" placeholder="pl. ShadowVapes" />
-    </label>
+    <section class="panel">
+      <div class="panelHead">
+        <h2>Új track</h2>
+        <div class="hint">YouTube / Spotify link → meta auto kitöltés</div>
+      </div>
 
-    <label class="field">
-      <span>Repo</span>
-      <input id="ghRepo" placeholder="pl. musicdrive" />
-    </label>
+      <div class="formGrid">
+        <label class="field full">
+          <span>YouTube vagy Spotify link (opcionális)</span>
+          <input id="link" placeholder="https://open.spotify.com/track/... vagy https://www.youtube.com/watch?v=..." />
+        </label>
 
-    <label class="field">
-      <span>Branch</span>
-      <input id="ghBranch" value="main" />
-    </label>
+        <label class="field">
+          <span>Cím</span>
+          <input id="title" placeholder="Track címe" />
+        </label>
+        <label class="field">
+          <span>Előadó / kiadó</span>
+          <input id="artist" placeholder="Előadó" />
+        </label>
 
-    <label class="field full">
-      <span>GitHub token</span>
-      <input id="ghToken" placeholder="ghp_..." />
-      <small>
-        repo (private) vagy public_repo (public).  
-        <br>
-        <b>Zenét NE itt tölts fel.</b> Csak meta + útvonal!
-      </small>
-    </label>
-  </div>
+        <label class="field full">
+          <span>Borítókép link</span>
+          <input id="cover" placeholder="https://..." />
+        </label>
 
-  <div class="row">
-    <button id="btnTest" class="btn ghost">Kapcsolat teszt</button>
-    <span id="ghStatus">—</span>
-  </div>
-</section>
+        <label class="field full">
+          <span>Audio elérési út / link</span>
+          <input id="audioUrl" placeholder="pl. audio/valami.mp3 vagy https://..." />
+          <small>GitHub Pages-hez a legegyszerűbb: tedd fel az mp3-at a repo <code>audio/</code> mappájába (VS Code / git push vagy GitHub web feltöltés), és ide írd be az útvonalát.</small>
+        </label>
 
-<section class="panel">
-  <h2>Új zene</h2>
+        <label class="field full">
+          <span>Audio fájl (opcionális, kicsi fájlokra)</span>
+          <input id="file" type="file" accept="audio/*" />
+          <small>GitHubra megy: <code>audio/</code> mappába.</small>
+        </label>
+      </div>
 
-  <label class="field full">
-    <span>YouTube / Spotify link (opcionális)</span>
-    <input id="link" placeholder="https://open.spotify.com/track/..." />
-  </label>
+      <div class="row">
+        <button id="btnAutofill" class="btn ghost">Meta betöltés linkből</button>
+        <button id="btnAdd" class="btn">Hozzáadás listához</button>
+        <span id="addStatus" class="status">—</span>
+      </div>
+    </section>
 
-  <div class="formGrid">
-    <label class="field">
-      <span>Cím</span>
-      <input id="title" />
-    </label>
+    <section class="panel">
+      <div class="panelHead">
+        <h2>Track lista</h2>
+        <div class="hint">Rendezés / törlés mehet, mentés írja a JSON-t</div>
+      </div>
+      <div id="list" class="adminList"></div>
+    </section>
 
-    <label class="field">
-      <span>Előadó</span>
-      <input id="artist" />
-    </label>
-  </div>
+    <section class="panel subtle">
+      <h2>Megjegyzés</h2>
+      <ul class="bullets">
+        <li>Ha nincs GitHub token beállítva, a lista akkor is működik (localStorage “draft”).</li>
+        <li>GitHub mentéshez token kell + repo beállítás.</li>
+      </ul>
+    </section>
+  </main>
 
-  <label class="field full">
-    <span>Borítókép URL</span>
-    <input id="cover" placeholder="https://..." />
-  </label>
-
-  <label class="field full">
-    <span>Audio elérési út (KÖTELEZŐ)</span>
-    <input id="audioUrl" placeholder="audio/zenem.mp3" />
-    <small>
-      A zenét VS Code / git push-sal tedd fel a repo <code>audio/</code> mappába.
-    </small>
-  </label>
-
-  <div class="row">
-    <button id="btnAutofill" class="btn ghost">Meta betöltés linkből</button>
-    <button id="btnAdd" class="btn">Hozzáadás listához</button>
-    <span id="addStatus">—</span>
-  </div>
-</section>
-
-<section class="panel">
-  <h2>Track lista</h2>
-  <div id="list"></div>
-</section>
-
-</main>
-
-<script src="assets/github.js"></script>
-<script src="assets/admin.js"></script>
+  <script src="assets/github.js"></script>
+  <script src="assets/admin.js"></script>
 </body>
 </html>
