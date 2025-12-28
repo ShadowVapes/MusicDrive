@@ -190,7 +190,7 @@
   }
 
   async function loadTracks() {
-    const res = await fetch("data/tracks.json", {cache:"no-store"});
+    const res = await fetch(`data/tracks.json?v=${Date.now()}`, {cache:"no-store"});
     if (!res.ok) throw new Error("tracks.json nem olvasható");
     const data = await res.json();
     tracks = Array.isArray(data) ? data : (data.tracks || []);

@@ -13,6 +13,7 @@
   const title = $("#title");
   const artist = $("#artist");
   const cover = $("#cover");
+  const audioUrl = $("#audioUrl");
   const file = $("#file");
 
   const btnAutofill = $("#btnAutofill");
@@ -214,12 +215,13 @@
     }
   }
 
-  function resetForm() { link.value=""; title.value=""; artist.value=""; cover.value=""; file.value=""; }
+  function resetForm() { link.value=""; title.value=""; artist.value=""; cover.value=""; audioUrl.value=""; file.value=""; }
 
   btnAdd.addEventListener("click", async () => {
     try{
       const f = file.files && file.files[0];
-      if (!f) return setStatus(addStatus, "Audio fájl kell.", "warn");
+      const urlIn = (audioUrl.value||"").trim();
+      if (!f && !urlIn) return setStatus(addStatus, "Adj meg audio útvonalat/linket, vagy válassz fájlt.", "warn");
 
       if ((link.value||"").trim() && !title.value.trim() && !artist.value.trim() && !cover.value.trim()) {
         await autofillFromLink();
@@ -236,15 +238,19 @@
         file: ""
       };
 
+      if (urlIn){
+      t.file = urlIn;
+    } else {
       const ext = (f.name.match(/\.[a-z0-9]+$/i)?.[0] || "").toLowerCase() || ".mp3";
       const base = sanitizeFilename(`${t.artist}-${t.title}`.replace(/^-/,"").replace(/-$/,""));
       const fname = `${base || "track"}_${Date.now()}${ext}`;
       t.file = `audio/${fname}`;
+    }
 
-      if (!t.title) t.title = f.name.replace(/\.[^.]+$/,"");
+      if (!t.title) t.title = (f ? f.name.replace(/\.[^.]+$/,"") : (t.file.split("/").pop()||"")).replace(/\.[^.]+$/,"");(/\.[^.]+$/,"");
       if (!t.artist) t.artist = "Unknown";
 
-      t._pendingFile = f; // session only
+      if (f && !urlIn) t._pendingFile = f; // session only
 
       tracks.unshift(t);
       saveDraft();
@@ -263,6 +269,10 @@
     const c = cfg();
     for (const t of tracks) {
       if (!t._pendingFile) continue;
+      // GitHub Contents API size limit is tight; keep this for small files only.
+      if (t._pendingFile.size > 900000) {
+        throw new Error(`A(z) ${t._pendingFile.name} túl nagy a böngészős GitHub feltöltéshez. Tedd fel git push-sal a repo audio/ mappájába, és az adminban csak az útvonalat add meg.`);
+      }
       const path = t.file;
 
       const buf = await t._pendingFile.arrayBuffer();
