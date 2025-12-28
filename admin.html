@@ -78,7 +78,13 @@
         </label>
 
         <label class="field full">
-          <span>Audio fájl</span>
+          <span>Audio elérési út / link</span>
+          <input id="audioUrl" placeholder="pl. audio/valami.mp3 vagy https://..." />
+          <small>GitHub Pages-hez a legegyszerűbb: tedd fel az mp3-at a repo <code>audio/</code> mappájába (VS Code / git push vagy GitHub web feltöltés), és ide írd be az útvonalát.</small>
+        </label>
+
+        <label class="field full">
+          <span>Audio fájl (opcionális, kicsi fájlokra)</span>
           <input id="file" type="file" accept="audio/*" />
           <small>GitHubra fogjuk feltölteni: <code>audio/</code> mappába.</small>
         </label>
