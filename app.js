@@ -4,7 +4,51 @@ let currentIndex = -1;
 let lastJson = "";
 let filterMode = "all";
 
+let tracksUrl = "tracks.json";
+let rawBaseUrl = "";
+
 const audio = document.getElementById("audio");
+const playIcon = document.getElementById("playIcon");
+
+function setPlayIconState(isPlaying){
+  if(!playIcon) return;
+  if(isPlaying){
+    playIcon.innerHTML = '<path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"/>';
+  }else{
+    playIcon.innerHTML = '<path d="M8 5v14l11-7L8 5Z"/>';
+  }
+}
+
+function guessRepoFromUrl(){
+  // Project Pages: https://<owner>.github.io/<repo>/
+  // User Pages:    https://<owner>.github.io/
+  const host = String(location.hostname||"");
+  const owner = host.split(".")[0] || "";
+  const parts = String(location.pathname||"").split("/").filter(Boolean);
+  const repoFromPath = parts[0] || "";
+  const repo = repoFromPath || (owner ? `${owner}.github.io` : "");
+  return { owner, repo };
+}
+
+async function resolveRawOnce(){
+  if(rawBaseUrl && tracksUrl !== "tracks.json") return;
+  const { owner, repo } = guessRepoFromUrl();
+  if(!owner || !repo) return;
+
+  const branches = ["main","master"];
+  for(const br of branches){
+    const base = `https://raw.githubusercontent.com/${owner}/${repo}/${br}/`;
+    const url = base + "tracks.json?ts=" + Date.now();
+    try{
+      const r = await fetch(url, { cache: "no-store" });
+      if(!r.ok) continue;
+      // OK
+      rawBaseUrl = base;
+      tracksUrl = base + "tracks.json";
+      return;
+    }catch{}
+  }
+}
 
 function normalize(s){ return (s||"").toLowerCase().trim(); }
 
@@ -41,7 +85,11 @@ function render(){
     card.innerHTML = `
       <div class="cover">
         <img alt="" src="${safeText(t.coverUrl || "")}" onerror="this.style.opacity=.35; this.src='data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 64 64\'><rect width=\'64\' height=\'64\' rx=\'18\' fill=\'%23111b27\'/><text x=\'32\' y=\'38\' text-anchor=\'middle\' fill=\'%2393a4b7\' font-size=\'14\' font-family=\'Arial\'>NO COVER</text></svg>';">
-        <div class="playbtn">▶</div>
+        <div class="playbtn" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 5v14l11-7L8 5Z"/>
+          </svg>
+        </div>
       </div>
       <div class="meta">
         <p class="title">${safeText(t.title || "Névtelen")}</p>
@@ -88,11 +136,11 @@ function playIndex(idx){
   if(t.audioUrl){
     audio.src = t.audioUrl;
     audio.play().catch(()=>{});
-    document.getElementById("play").textContent = "⏸️";
+    setPlayIconState(true);
   }else{
     audio.pause();
     audio.src = "";
-    document.getElementById("play").textContent = "▶️";
+    setPlayIconState(false);
     toast("Ez a track csak link (Spotify/YouTube).");
   }
 }
@@ -104,10 +152,10 @@ function toggle(){
   }
   if(audio.paused){
     audio.play().catch(()=>{});
-    document.getElementById("play").textContent = "⏸️";
+    setPlayIconState(true);
   }else{
     audio.pause();
-    document.getElementById("play").textContent = "▶️";
+    setPlayIconState(false);
   }
 }
 
@@ -162,13 +210,27 @@ function wire(){
 
 async function loadTracks(showToast=false){
   try{
-    const r = await fetch("tracks.json?ts=" + Date.now(), {cache:"no-store"});
+    await resolveRawOnce();
+    const u = tracksUrl + (tracksUrl.includes("?") ? "&" : "?") + "ts=" + Date.now();
+    const r = await fetch(u, {cache:"no-store"});
     if(!r.ok) throw new Error("tracks.json fetch failed");
     const txt = await r.text();
     if(txt === lastJson) return;
     lastJson = txt;
     const data = JSON.parse(txt);
-    allTracks = (data.tracks || []).slice().sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+    allTracks = (data.tracks || []).slice().map(t=>{
+      const x = { ...t };
+      // Ha régi relative url maradt a listában, húzzuk fel raw base-re.
+      if(rawBaseUrl){
+        if(x.audioUrl && !String(x.audioUrl).startsWith("http")){
+          x.audioUrl = rawBaseUrl + String(x.audioUrl).replace(/^\.\//, "");
+        }
+        if(x.coverUrl && !String(x.coverUrl).startsWith("http")){
+          x.coverUrl = rawBaseUrl + String(x.coverUrl).replace(/^\.\//, "");
+        }
+      }
+      return x;
+    }).sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
     document.getElementById("lastSync").textContent = new Date().toLocaleTimeString();
 
     const curId = allTracks[currentIndex]?.id;

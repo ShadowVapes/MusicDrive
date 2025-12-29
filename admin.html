@@ -18,15 +18,15 @@
     </div>
 
     <nav class="nav">
-      <a href="./">⬅️ Vissza a lejátszóhoz</a>
-      <a class="active" href="./admin.html">⚙️ Admin</a>
+      <a href="./">Vissza a lejátszóhoz</a>
+      <a class="active" href="./admin.html">Admin</a>
     </nav>
 
     <div class="sidecard">
       <div class="small">Állapot</div>
       <div style="margin-top:10px" class="row">
-        <span class="chip">💾 <span id="saveState">—</span></span>
-        <span class="chip">🧾 <span id="libCount">0</span></span>
+        <span class="chip"><span id="saveState">—</span></span>
+        <span class="chip"><span id="libCount">0</span></span>
       </div>
       <p class="small" style="margin-top:12px">
         Autosave: ha változtatsz a listán, pár mp-en belül commitol.
@@ -41,8 +41,8 @@
         <div class="muted">Link beillesztés → auto kitöltés. Feltöltés → repo rootba ment.</div>
       </div>
       <div class="row">
-        <button class="btn" id="testBtn">🔌 Kapcsolat teszt</button>
-        <button class="btn danger" id="wipeDraft">🧹 Draft törlés</button>
+        <button class="btn" id="testBtn">Kapcsolat teszt</button>
+        <button class="btn danger" id="wipeDraft">Draft törlés</button>
       </div>
     </div>
 
@@ -65,7 +65,10 @@
         <div class="field">
           <label>Token (fine-grained PAT)</label>
           <input id="ghToken" placeholder="ghp_..." type="password"/>
-          <div class="small">Jogosultság: <span class="kbd">Contents: Read and write</span> (csak erre a repóra).</div>
+          <div class="small">
+            Jogosultság: <span class="kbd">Contents: Read and write</span> (csak erre a repóra).
+            Ha org repo és SSO van: a tokent engedélyezni kell az orgnál is.
+          </div>
         </div>
 
         <div class="row">
@@ -89,8 +92,19 @@
         </div>
 
         <div class="field">
-          <label>Kiadó / Előadó(k) (vesszővel több is)</label>
-          <input id="artists" placeholder="pl. Aki Énekli, Producer"/>
+          <label>Előadó(k) (vesszővel több is)</label>
+          <input id="artists" placeholder="pl. Aki énekli, Feat valaki"/>
+        </div>
+
+        <div class="field">
+          <label>Kiadó(k) (vesszővel több is)</label>
+          <input id="publisher" placeholder="pl. Label 1, Label 2"/>
+        </div>
+
+        <div class="field">
+          <label>Borító kép link (opcionális)</label>
+          <input id="coverLink" placeholder="https://..."/>
+          <div class="small">Link beillesztésnél automatikusan kitölti (thumbnail), ha van.</div>
         </div>
 
         <div class="row">
@@ -105,7 +119,7 @@
         </div>
 
         <div class="row" style="margin-top:12px">
-          <button class="btn primary" id="addTrack">➕ Hozzáadás a könyvtárhoz</button>
+          <button class="btn primary" id="addTrack">Hozzáadás a könyvtárhoz</button>
           <span class="small" id="addHint">—</span>
         </div>
       </div>
@@ -118,8 +132,8 @@
           <div class="small">Minden módosítás autosave (debounce).</div>
         </div>
         <div class="row">
-          <button class="btn" id="refreshLib">🔄 Frissítés</button>
-          <button class="btn danger" id="forceSave">💥 Mentés most</button>
+          <button class="btn" id="refreshLib">Frissítés</button>
+          <button class="btn danger" id="forceSave">Mentés most</button>
         </div>
       </div>
 
@@ -128,7 +142,8 @@
           <thead>
             <tr>
               <th style="min-width:220px">Cím</th>
-              <th style="min-width:220px">Előadó/Kiadó</th>
+              <th style="min-width:240px">Előadó(k)</th>
+              <th style="min-width:240px">Kiadó(k)</th>
               <th>MP3</th>
               <th>Linkek</th>
               <th style="min-width:170px">Művelet</th>

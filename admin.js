@@ -30,8 +30,17 @@ function authHeaders(){
   if(!cfg.token) throw new Error("Nincs token beállítva.");
   return {
     "Authorization": "Bearer " + cfg.token,
-    "Accept": "application/vnd.github+json"
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
   };
+}
+
+function friendlyGitHub403(text){
+  const t = String(text||"");
+  if(t.includes("Resource not accessible by personal access token")){
+    return "403 – A token nem fér hozzá a repóhoz. Ellenőrizd: (1) fine‑grained PAT, (2) ennél a tokennél be van pipálva ez a repo (Selected repositories), (3) Repository permissions: Contents = Read and write, (4) ha org/SSO: a tokent Authorize-olni kell az orgnál.";
+  }
+  return null;
 }
 
 async function ghGetJson(path){
@@ -55,9 +64,17 @@ async function ghPutFile(path, contentBase64, message){
   });
   if(!r.ok){
     const t = await r.text().catch(()=> "");
+    if(r.status === 403){
+      const friendly = friendlyGitHub403(t);
+      if(friendly) throw new Error(friendly);
+    }
     throw new Error("GitHub PUT hiba: " + r.status + " " + t);
   }
   return await r.json();
+}
+
+function rawBase(){
+  return `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/`;
 }
 
 function fileToBase64(file){
@@ -129,6 +146,9 @@ function renderTable(){
       <td>
         <input data-id="${safeText(t.id)}" data-k="artists" value="${safeText(t.artists||"")}" style="width:100%"/>
       </td>
+      <td>
+        <input data-id="${safeText(t.id)}" data-k="publisher" value="${safeText(t.publisher||"")}" style="width:100%"/>
+      </td>
       <td>${t.audioUrl ? "<span class='kbd'>van</span>" : "<span class='small'>nincs</span>"}</td>
       <td><div class="small">${t.spotifyUrl ? "Spotify" : ""} ${t.youtubeUrl ? "YouTube" : ""}</div></td>
       <td>
@@ -171,10 +191,18 @@ function loadDraft(){
     $("#link").value = d.link || "";
     $("#title").value = d.title || "";
     $("#artists").value = d.artists || "";
+    $("#publisher").value = d.publisher || "";
+    $("#coverLink").value = d.coverLink || "";
   }catch{}
 }
 function saveDraft(){
-  const d = { link: $("#link").value.trim(), title: $("#title").value.trim(), artists: $("#artists").value.trim() };
+  const d = {
+    link: $("#link").value.trim(),
+    title: $("#title").value.trim(),
+    artists: $("#artists").value.trim(),
+    publisher: $("#publisher").value.trim(),
+    coverLink: $("#coverLink").value.trim()
+  };
   localStorage.setItem(LS_DRAFT, JSON.stringify(d));
   $("#addHint").textContent = "Draft mentve.";
 }
@@ -212,9 +240,18 @@ async function autofillFromLink(url){
         $("#title").value = m.slice(1).join(" - ").slice(0, 120);
       }
     }
+    // Kiadó / előadó (oEmbedből)
+    const author = String(j.author_name || "").trim();
+    if(author){
+      if(!$("#publisher").value.trim()) $("#publisher").value = author;
+      if(!$("#artists").value.trim()) $("#artists").value = author;
+    }
+
+    // Borító link (oEmbed thumbnail)
     if(j.thumbnail_url){
-      $("#addHint").textContent = "Borító jött linkből (thumbnail).";
+      if(!$("#coverLink").value.trim()) $("#coverLink").value = j.thumbnail_url;
       document.getElementById("cover").dataset.thumb = j.thumbnail_url;
+      $("#addHint").textContent = "Meta kitöltve (cím/előadó/kiadó/borító link).";
     }else{
       $("#addHint").textContent = "Meta kitöltve.";
     }
@@ -239,7 +276,9 @@ async function addTrack(){
 
     const title = $("#title").value.trim();
     const artists = $("#artists").value.trim();
+    const publisher = $("#publisher").value.trim();
     const link = $("#link").value.trim();
+    const coverLink = $("#coverLink").value.trim();
 
     const mp3File = $("#mp3").files?.[0] || null;
     const coverFile = $("#cover").files?.[0] || null;
@@ -259,7 +298,7 @@ async function addTrack(){
       const ext = extFromFile(mp3File, ".mp3");
       const path = `track__${id}${ext}`;
       await ghPutFile(path, b64, `add track file ${path}`);
-      audioUrl = "./" + path;
+      audioUrl = rawBase() + path;
     }
 
     if(coverFile){
@@ -267,7 +306,9 @@ async function addTrack(){
       const ext = extFromFile(coverFile, ".jpg");
       const path = `cover__${id}${ext}`;
       await ghPutFile(path, b64, `add cover file ${path}`);
-      coverUrl = "./" + path;
+      coverUrl = rawBase() + path;
+    }else if(coverLink){
+      coverUrl = coverLink;
     }else if(coverThumb){
       coverUrl = coverThumb;
     }
@@ -276,7 +317,7 @@ async function addTrack(){
       id,
       title,
       artists,
-      publisher: "",
+      publisher,
       coverUrl,
       audioUrl,
       spotifyUrl: detectLinkType(link)==="spotify" ? link : "",
@@ -291,7 +332,9 @@ async function addTrack(){
 
     $("#title").value = "";
     $("#artists").value = "";
+    $("#publisher").value = "";
     $("#link").value = "";
+    $("#coverLink").value = "";
     $("#mp3").value = "";
     $("#cover").value = "";
     $("#cover").dataset.thumb = "";
@@ -333,11 +376,13 @@ function wire(){
     $("#link").value = "";
     $("#title").value = "";
     $("#artists").value = "";
+    $("#publisher").value = "";
+    $("#coverLink").value = "";
     $("#cover").dataset.thumb = "";
     toast("Draft törölve.");
   });
 
-  ["link","title","artists"].forEach(id=>{
+  ["link","title","artists","publisher","coverLink"].forEach(id=>{
     $("#"+id).addEventListener("input", saveDraftDebounced);
   });
 
