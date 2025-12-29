@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Zenelejátszó</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='18' fill='%231ed760'/><path d='M22 41c0 3 2 5 5 5s5-2 5-5-2-5-5-5-5 2-5 5zm0-20v18' stroke='%230b0f14' stroke-width='4' stroke-linecap='round'/><path d='M32 22l18-4v22' stroke='%230b0f14' stroke-width='4' stroke-linecap='round'/><path d='M40 39c0 3 2 5 5 5s5-2 5-5-2-5-5-5-5 2-5 5z' fill='none' stroke='%230b0f14' stroke-width='4'/></svg>"/>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <div style="font-weight:800; letter-spacing:.2px">Zenelejátszó</div>
+        <div class="small">GitHub Pages • gyors frissítés</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="active" href="./">🏠 Kezdő</a>
+      <a href="./admin.html">⚙️ Admin</a>
+    </nav>
+
+    <div class="sidecard">
+      <div class="row" style="justify-content:space-between">
+        <div class="chip">⏱️ <span id="lastSync">—</span></div>
+        <div class="chip">🎧 <span id="trackCount">0</span></div>
+      </div>
+      <p class="small" style="margin:12px 0 0">
+        Admin változás után pár mp és itt is megjelenik.
+      </p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="h1">Hallgasd, amit akarsz</div>
+        <div class="muted">Kártyás nézet, gyors lejátszás, mobilon is.</div>
+      </div>
+      <div class="search">
+        <div class="icon">🔎</div>
+        <input id="q" placeholder="Keresés cím / előadó / kiadó…" autocomplete="off"/>
+      </div>
+    </div>
+
+    <div class="pills" style="margin-top:14px">
+      <div class="pill active" data-filter="all">Összes</div>
+      <div class="pill" data-filter="mp3">MP3</div>
+      <div class="pill" data-filter="links">Linkek</div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" style="display:none">
+      Nincs még zene. Menj az <a href="./admin.html" class="kbd">admin.html</a>-re és dobj fel pár tracket. 🎶
+    </div>
+  </main>
+</div>
+
+<div class="playerbar">
+  <div class="playerinner">
+    <div class="now">
+      <div class="thumb"><img id="nowCover" alt="" src=""/></div>
+      <div class="info">
+        <div class="t" id="nowTitle">Válassz egy zenét</div>
+        <div class="a" id="nowArtist">—</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="ctrlrow">
+        <button class="ctrlbtn" id="prev" title="Előző">⏮️</button>
+        <button class="ctrlbtn primary" id="play" title="Lejátszás">▶️</button>
+        <button class="ctrlbtn" id="next" title="Következő">⏭️</button>
+      </div>
+      <div class="seek">
+        <small id="tCur">0:00</small>
+        <input id="seek" class="range" type="range" min="0" max="1000" value="0"/>
+        <small id="tDur">0:00</small>
+      </div>
+    </div>
+
+    <div class="right">
+      <a class="linkbtn" id="extLink" href="#" target="_blank" style="display:none">Megnyitás</a>
+      <div class="vol">
+        <span class="muted">🔊</span>
+        <input id="vol" class="range" type="range" min="0" max="100" value="80"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<audio id="audio" preload="metadata"></audio>
+<script src="utils.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

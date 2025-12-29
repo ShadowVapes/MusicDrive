@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin • Zenelejátszó</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <div style="font-weight:800; letter-spacing:.2px">Admin</div>
+        <div class="small">GitHub commit mentés (mappa nélkül)</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="./">⬅️ Vissza a lejátszóhoz</a>
+      <a class="active" href="./admin.html">⚙️ Admin</a>
+    </nav>
+
+    <div class="sidecard">
+      <div class="small">Állapot</div>
+      <div style="margin-top:10px" class="row">
+        <span class="chip">💾 <span id="saveState">—</span></span>
+        <span class="chip">🧾 <span id="libCount">0</span></span>
+      </div>
+      <p class="small" style="margin-top:12px">
+        Autosave: ha változtatsz a listán, pár mp-en belül commitol.
+      </p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="h1">Könyvtár kezelése</div>
+        <div class="muted">Link beillesztés → auto kitöltés. Feltöltés → repo rootba ment.</div>
+      </div>
+      <div class="row">
+        <button class="btn" id="testBtn">🔌 Kapcsolat teszt</button>
+        <button class="btn danger" id="wipeDraft">🧹 Draft törlés</button>
+      </div>
+    </div>
+
+    <div class="formgrid">
+      <div class="panel">
+        <div class="small">GitHub beállítás (localStorage)</div>
+
+        <div class="field">
+          <label>Owner</label>
+          <input id="ghOwner" placeholder="pl. tesouser"/>
+        </div>
+        <div class="field">
+          <label>Repo</label>
+          <input id="ghRepo" placeholder="pl. zenelojatszo"/>
+        </div>
+        <div class="field">
+          <label>Branch</label>
+          <input id="ghBranch" placeholder="main"/>
+        </div>
+        <div class="field">
+          <label>Token (fine-grained PAT)</label>
+          <input id="ghToken" placeholder="ghp_..." type="password"/>
+          <div class="small">Jogosultság: <span class="kbd">Contents: Read and write</span> (csak erre a repóra).</div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="saveCfg">Mentés</button>
+          <div class="small" id="cfgHint">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="small">Új track</div>
+
+        <div class="field">
+          <label>YouTube vagy Spotify link (paste → auto kitölt)</label>
+          <input id="link" placeholder="https://..." />
+          <div class="small">Nem kell gomb: ha beilleszted, kitölti a címet (oEmbed).</div>
+        </div>
+
+        <div class="field">
+          <label>Cím</label>
+          <input id="title" placeholder="Track cím"/>
+        </div>
+
+        <div class="field">
+          <label>Kiadó / Előadó(k) (vesszővel több is)</label>
+          <input id="artists" placeholder="pl. Aki Énekli, Producer"/>
+        </div>
+
+        <div class="row">
+          <div class="field" style="flex:1; margin:0">
+            <label>MP3 fájl (opcionális)</label>
+            <input id="mp3" type="file" accept="audio/mpeg,audio/mp3"/>
+          </div>
+          <div class="field" style="flex:1; margin:0">
+            <label>Borító (opcionális)</label>
+            <input id="cover" type="file" accept="image/*"/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="addTrack">➕ Hozzáadás a könyvtárhoz</button>
+          <span class="small" id="addHint">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:800">Könyvtár</div>
+          <div class="small">Minden módosítás autosave (debounce).</div>
+        </div>
+        <div class="row">
+          <button class="btn" id="refreshLib">🔄 Frissítés</button>
+          <button class="btn danger" id="forceSave">💥 Mentés most</button>
+        </div>
+      </div>
+
+      <div style="overflow:auto; margin-top:10px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="min-width:220px">Cím</th>
+              <th style="min-width:220px">Előadó/Kiadó</th>
+              <th>MP3</th>
+              <th>Linkek</th>
+              <th style="min-width:170px">Művelet</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="utils.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
