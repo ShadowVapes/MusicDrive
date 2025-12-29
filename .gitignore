@@ -1,0 +1,16 @@
+# deps
+node_modules
+
+# builds
+client/dist
+
+# env
+.env
+
+# uploads + db (ha nem akarod commitolni)
+server/uploads/*
+!server/uploads/.gitkeep
+server/data/db.json
+
+# logs
+*.log
